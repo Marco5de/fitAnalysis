@@ -12,6 +12,8 @@ class fitAnalyzer:
     numberRecords = 0
     ftp = 0
     powerVec = 0
+    speedVec = 0
+    cadenceVec = 0
 
     def __init__(self, fitFilePath, ftp):
         try:
@@ -23,6 +25,8 @@ class fitAnalyzer:
         self.numberRecords = self.__getRecordNumber()
         self.ftp = ftp
         self.powerVec = self.__getFieldVector("power")
+        self.speedVec = self.__getFieldVector("enhanced_speed") * 3.6
+        self.cadenceVec = self.__getFieldVector("cadence")
 
     # todo is there an efficient way to do this?
     def __getRecordNumber(self):
@@ -82,16 +86,26 @@ class fitAnalyzer:
         self.__getGeneralStats()
         avg = self.__getAverage(self.powerVec)
         normPower = self.__getNormalized()
-
-        t = np.arange(0, self.numberRecords/60,1/60)
+        print("Avg. Power: " + str(avg) + " Norm. Power: " + str(normPower))
         #sigma kann als parameter noch eingestellt werden, wie sehr gesmoothed werden soll (sieht mit 3 aber nicht schlecht aus)
         smoothedPower = gaussian_filter1d(self.powerVec, sigma=3)
+        self.__plot(smoothedPower,"Power","Time in min","Power in Watts")
 
-        plt.plot(t, smoothedPower,linewidth=1)
-        plt.title("Power")
-        plt.text(0, 640, str("Avg. Power: " + str(int(avg)) + "Watts"), fontsize=12, color="red")
-        plt.text(0, 600, str("Norm. Power: " + str(int(normPower)) + "Watts"), fontsize=12, color="red")
-        plt.xlabel("Time in min"); plt.ylabel("Power in W")
+
+    def plotSpeed(self):
+        smoothedSpeed = gaussian_filter1d(self.speedVec,sigma=3)
+        self.__plot(smoothedSpeed,"Speed","Time in min","Speed in km/h")
+
+    def plotCadence(self):
+        smoothedCadence = gaussian_filter1d(self.cadenceVec,sigma=3)
+        self.__plot(smoothedCadence,"Cadence","Time in min","Cadence in 1/min")
+
+    def __plot(self,plotVec,title,xlabel,ylabel):
+        t = np.arange(0, self.numberRecords / 60, 1 / 60)
+        plt.plot(t, plotVec, linewidth=1)
+        plt.title(title)
+        plt.xlabel(xlabel);
+        plt.ylabel(ylabel)
         plt.show()
 
 
@@ -100,3 +114,5 @@ print("Anzahl an Records: " + str(ana.numberRecords))
 print("Intensity Factor: " + str(ana.getIntensityFactor()))
 print("TSS: " + str(ana.getTrainingStressScore()))
 ana.plotPower()
+ana.plotSpeed()
+ana.plotCadence()
