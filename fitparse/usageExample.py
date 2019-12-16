@@ -11,8 +11,8 @@ except FitParseError as e:
     sys.exit(1)
 
 # Get all data messages that are of type record
-#fitfile.get_messages() returns full info!
-for record in fitfile.get_messages('record'):
+#fitfile.get_messages('record') returns record info!
+for record in fitfile.get_messages():
 
     # Go through all the data entries in this record
     for record_data in record:
