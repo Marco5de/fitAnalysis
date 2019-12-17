@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pylab as plt
 from scipy.ndimage.filters import gaussian_filter1d
 import numbers
-
+import cv2
 
 # todo refactoring, dass nicht alles 10x berechnet werden muss!
 # todo speichern in Datei mit tagen damit ATL,CTL,TSB berechnet werden können!
@@ -107,12 +107,20 @@ class fitAnalyzer:
         plt.xlabel(xlabel);
         plt.ylabel(ylabel)
         plt.show()
+    
+    def plotPowerCadence(self):
+        smoothedCadence = gaussian_filter1d(self.cadenceVec,sigma=3)
+        smoothedPower = gaussian_filter1d(self.powerVec,sigma=3)
+        plt.scatter(smoothedCadence,smoothedPower)
+        plt.title("Power-Cadence")
+        plt.show()
 
-
+print("Opencv successfully installed: Version: " + str(cv2.__version__))
 ana = fitAnalyzer("file.fit", 275)
 print("Anzahl an Records: " + str(ana.numberRecords))
 print("Intensity Factor: " + str(ana.getIntensityFactor()))
 print("TSS: " + str(ana.getTrainingStressScore()))
+ana.plotPowerCadence()
 ana.plotPower()
 ana.plotSpeed()
 ana.plotCadence()
