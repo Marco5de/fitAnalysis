@@ -8,13 +8,9 @@ import cv2
 # todo refactoring, dass nicht alles 10x berechnet werden muss!
 # todo speichern in Datei mit tagen damit ATL,CTL,TSB berechnet werden können!
 class fitAnalyzer:
-    fitfile = 0
-    numberRecords = 0
-    ftp = 0
-    powerVec = 0
-    speedVec = 0
-    cadenceVec = 0
-
+    total_calories=total_ascent=total_distance=max_cadence = 0
+    avg_power=avg_cadence=start_time=sport=max_power=max_speed = 0
+    
     def __init__(self, fitFilePath, ftp):
         try:
             self.fitfile = FitFile(fitFilePath)
@@ -27,6 +23,10 @@ class fitAnalyzer:
         self.powerVec = self.__getFieldVector("power")
         self.speedVec = self.__getFieldVector("enhanced_speed") * 3.6
         self.cadenceVec = self.__getFieldVector("cadence")
+        self.__getGeneralStats()
+
+    def __str__(self):
+        return "Hier sollte ein sinnvoller string ausgegebn werden!"
 
     # todo is there an efficient way to do this?
     def __getRecordNumber(self):
@@ -48,22 +48,21 @@ class fitAnalyzer:
 
     # todo better way to do this?
     def __getGeneralStats(self):
-        print()
         lock = False
         for idx, record in enumerate(self.fitfile.get_messages()):
             if lock:
-                print("Total ascent: " + str(record.get_value("total_ascent")))
-                print("Total calories: " + str(record.get_value("total_calories")))
+                self.total_ascent = record.get_value("total_ascent")
+                self.total_calories = record.get_value("total_calories")
                 break;
             if (isinstance(record.get_value("avg_power"), numbers.Number)):
-                print("Avg. Power: " + str(record.get_value("avg_power")))
-                print("Avg. Cadence: " + str(record.get_value("avg_cadence")))
-                print("Start time: " + str(record.get_value("start_time")))
-                print("Sport: " + str(record.get_value("sport")))
-                print("Max. Cadence: " + str(record.get_value("max_cadence")))
-                print("Max. Power: " + str(record.get_value("max_power")))
-                print("Max. Speed: " + str(record.get_value("max_speed")))
-                print("Total distance: " + str(record.get_value("total_distance")))
+                self.avg_power = record.get_value("avg_power")
+                self.avg_cadence = record.get_value("avg_cadence")
+                self.start_time = record.get_value("start_time")
+                self.sport = record.get_value("sport")
+                self.max_cadence = record.get_value("max_cadence")
+                self.max_power = record.get_value("max_power")
+                self.max_speed = record.get_value("max_speed")
+                self.total_distance = record.get_value("total_distance")
                 lock = True
 
 
@@ -83,7 +82,6 @@ class fitAnalyzer:
         return (self.numberRecords * self.__getNormalized() * self.getIntensityFactor()) / (36 * self.ftp)
 
     def plotPower(self):
-        self.__getGeneralStats()
         avg = self.__getAverage(self.powerVec)
         normPower = self.__getNormalized()
         print("Avg. Power: " + str(avg) + " Norm. Power: " + str(normPower))
@@ -108,10 +106,20 @@ class fitAnalyzer:
         plt.ylabel(ylabel)
         plt.show()
     
+    def calcKmeans(self):
+        data = np.transpose(np.vstack((self.cadenceVec,self.powerVec)))
+        data = np.float32(data)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.1)
+        compactness,labels,centers = cv2.kmeans(data,5,None,criteria,10,flags=cv2.KMEANS_RANDOM_CENTERS)
+        print()
+        print("Compactness: " + str(compactness))
+        print("Centers: " + str(centers))
+
     def plotPowerCadence(self):
+        colors = np.random.rand(self.numberRecords)
         smoothedCadence = gaussian_filter1d(self.cadenceVec,sigma=3)
         smoothedPower = gaussian_filter1d(self.powerVec,sigma=3)
-        plt.scatter(smoothedCadence,smoothedPower)
+        plt.scatter(smoothedCadence,smoothedPower,c=colors,alpha=.5,s=2)
         plt.title("Power-Cadence")
         plt.show()
 
@@ -120,7 +128,9 @@ ana = fitAnalyzer("file.fit", 275)
 print("Anzahl an Records: " + str(ana.numberRecords))
 print("Intensity Factor: " + str(ana.getIntensityFactor()))
 print("TSS: " + str(ana.getTrainingStressScore()))
-ana.plotPowerCadence()
-ana.plotPower()
-ana.plotSpeed()
-ana.plotCadence()
+#ana.plotPowerCadence()
+#ana.plotPower()
+#ana.plotSpeed()
+#ana.plotCadence()
+ana.calcKmeans()
+print("ToString: " + str(ana))
