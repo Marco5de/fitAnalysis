@@ -128,7 +128,7 @@ class fitAnalyzer:
     def serialize(self):
         powerList = self.powerVec.tolist() # nested lists with same data, indices
         file_path = "ser.json" ## your path variable
-        json.dump({"powerList" : powerList}, codecs.open(file_path, 'w', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4)
+        json.dump({"powerVec" : powerList}, codecs.open(file_path, 'w', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4)
     
     def deserialize(self,path):
         obj_text = codecs.open(path, 'r', encoding='utf-8').read()
