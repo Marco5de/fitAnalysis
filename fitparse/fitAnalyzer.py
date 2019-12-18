@@ -4,9 +4,11 @@ import matplotlib.pylab as plt
 from scipy.ndimage.filters import gaussian_filter1d
 import numbers
 import cv2
+import codecs, json 
 
-# todo refactoring, dass nicht alles 10x berechnet werden muss!
+
 # todo speichern in Datei mit tagen damit ATL,CTL,TSB berechnet werden können!
+# todo speichern des datums etc--> serialisierung des objekts und hinzufügen einer liste! --> möglichst so, dass ein fehler nicht alles kaputt macht
 class fitAnalyzer:
     total_calories=total_ascent=total_distance=max_cadence = 0
     avg_power=avg_cadence=start_time=sport=max_power=max_speed = 0
@@ -122,6 +124,17 @@ class fitAnalyzer:
         plt.scatter(smoothedCadence,smoothedPower,c=colors,alpha=.5,s=2)
         plt.title("Power-Cadence")
         plt.show()
+    
+    def serialize(self):
+        powerList = self.powerVec.tolist() # nested lists with same data, indices
+        file_path = "ser.json" ## your path variable
+        json.dump({"powerList" : powerList}, codecs.open(file_path, 'w', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4)
+    
+    def deserialize(self,path):
+        obj_text = codecs.open(path, 'r', encoding='utf-8').read()
+        b_new = json.loads(obj_text)
+        a_new = np.array(b_new)
+        #print(a_new)
 
 print("Opencv successfully installed: Version: " + str(cv2.__version__))
 ana = fitAnalyzer("file.fit", 275)
@@ -134,3 +147,5 @@ print("TSS: " + str(ana.getTrainingStressScore()))
 #ana.plotCadence()
 ana.calcKmeans()
 print("ToString: " + str(ana))
+ana.serialize()
+ana.deserialize("ser.json")
