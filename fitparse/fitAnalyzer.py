@@ -7,7 +7,6 @@ import FitObject
 
 
 # todo speichern in Datei mit tagen damit ATL,CTL,TSB berechnet werden können!
-# todo speichern des datums etc--> serialisierung des objekts und hinzufügen einer liste! --> möglichst so, dass ein fehler nicht alles kaputt macht
 class fitAnalyzer:
 
     def __init__(self, ftp, fitobj):
@@ -70,8 +69,12 @@ class fitAnalyzer:
         plt.scatter(smoothedCadence,smoothedPower,c=colors,alpha=.5,s=2)
         plt.title("Power-Cadence")
         plt.show()
-    
 
+    def powerHist(self):
+        plt.hist(self.fitobj.powerVec,bins=np.arange(0, max(self.fitobj.powerVec) + 25, 25))
+        plt.title("Power histogram")
+        plt.show()
+    
 
 print("Opencv successfully installed: Version: " + str(cv2.__version__))
 obj = FitObject.FitObject("file.fit")
@@ -84,5 +87,9 @@ ana.plotPower()
 ana.plotSpeed()
 ana.plotCadence()
 ana.calcKmeans()
+ana.powerHist()
+
+
+
 
 

@@ -8,38 +8,40 @@ import importlib
 
 importlib.import_module("FitObject")
 
-#todo speed vec missing
 
 class FitObject:
     total_calories = total_ascent = total_distance = max_cadence = 0
     avg_power = avg_cadence = start_time = sport = max_power = max_speed = 0
     fitfile = numerRecords = powerVec = speedVec = cadenceVec = 0
 
-    def __init__(self, path):
-        self.__path = path
-        try:
-            self.fitfile = FitFile(self.__path)
-            self.fitfile.parse()
-        except FitParseError as e:
-            raise NameError("Error parsing/loading .FIT file")
+    def __init__(self, path, readJson=False):
+        if not readJson:
+            self.__path = path
+            try:
+                self.fitfile = FitFile(self.__path)
+                self.fitfile.parse()
+            except FitParseError as e:
+                raise NameError("Error parsing/loading .FIT file")
 
-        self.numberRecords = self.__getRecordNumber()
-        self.powerVec = self.__getFieldVector("power")
-        self.speedVec = self.__getFieldVector("enhanced_speed") * 3.6
-        self.cadenceVec = self.__getFieldVector("cadence")
-        self.__getGeneralStats()
+            self.numberRecords = self.__getRecordNumber()
+            self.powerVec = self.__getFieldVector("power")
+            self.speedVec = self.__getFieldVector("enhanced_speed") * 3.6
+            self.cadenceVec = self.__getFieldVector("cadence")
+            self.__getGeneralStats()
+        else:
+            self.deserialize(path)
 
     def __str__(self):
         outstr = ""
         outstr += ("Fitobject: " + str(self.start_time) + "\n")
-        outstr += ("Avg. Power: " + str(self.avg_power) +"Watts"+ "\n")
-        outstr += ("Distance: " + str(self.total_distance/1000) + "km" + "\n")
-        outstr += ("Ascent: " + str(self.total_ascent) +"m"+ "\n")
-        outstr += ("Calories burned: " + str(self.total_calories) +"kcal"+ "\n")
-        outstr += ("Avg. Cadence: " + str(self.avg_cadence) +"1/min"+ "\n")
-        outstr += ("Max. speed: " + str(self.max_speed*3.6) +"km/h"+ "\n")
-        outstr += ("Max. Power: " + str(self.max_power) +"Watts"+ "\n")
-        outstr += ("Max. Cadence: " + str(self.max_cadence) +"1/min"+ "\n")
+        outstr += ("Avg. Power: " + str(self.avg_power) + "Watts" + "\n")
+        outstr += ("Distance: " + str(self.total_distance / 1000) + "km" + "\n")
+        outstr += ("Ascent: " + str(self.total_ascent) + "m" + "\n")
+        outstr += ("Calories burned: " + str(self.total_calories) + "kcal" + "\n")
+        outstr += ("Avg. Cadence: " + str(self.avg_cadence) + "1/min" + "\n")
+        outstr += ("Max. speed: " + str(self.max_speed * 3.6) + "km/h" + "\n")
+        outstr += ("Max. Power: " + str(self.max_power) + "Watts" + "\n")
+        outstr += ("Max. Cadence: " + str(self.max_cadence) + "1/min" + "\n")
         return outstr
 
     def __getRecordNumber(self):
@@ -64,7 +66,6 @@ class FitObject:
         mvAvg = mvAvg[mvAvgLen - 1:] / mvAvgLen
         return np.power(np.average(np.power(mvAvg, 4)), .25)
 
-
     def __getGeneralStats(self):
         lock = False
         for idx, record in enumerate(self.fitfile.get_messages()):
@@ -83,7 +84,7 @@ class FitObject:
                 self.total_distance = record.get_value("total_distance")
                 lock = True
 
-    def serialize(self,outPath):
+    def serialize(self, outPath):
         data = {}
         data["ascent"] = self.total_ascent
         data["calories"] = self.total_calories
@@ -117,5 +118,3 @@ class FitObject:
         self.powerVec = np.array(data["powerVec"])
         self.cadenceVec = np.array(data["cadenceVec"])
         self.start_time = data["start_time"]
-
-
